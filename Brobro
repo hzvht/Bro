@@ -1,0 +1,212 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StaticHub_FinalFix"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999
+if syn then syn.protect_gui(ScreenGui) end 
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -110)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true 
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 14)
+UICorner.Parent = MainFrame
+
+local SnowFrame = Instance.new("Frame")
+SnowFrame.Size = UDim2.new(1, 0, 1, 0)
+SnowFrame.BackgroundTransparency = 1
+SnowFrame.ClipsDescendants = true
+SnowFrame.Parent = MainFrame
+
+local SnowCorner = Instance.new("UICorner")
+SnowCorner.CornerRadius = UDim.new(0, 14)
+SnowCorner.Parent = SnowFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.BackgroundTransparency = 1
+Title.Text = "STATIC HUB"
+Title.TextColor3 = Color3.fromRGB(255, 192, 203)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local List = Instance.new("Frame")
+List.Size = UDim2.new(1, -30, 1, -60)
+List.Position = UDim2.new(0, 15, 0, 50)
+List.BackgroundTransparency = 1
+List.Parent = MainFrame
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 10)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.Parent = List
+
+local function MakeButton(name, label)
+    local Btn = Instance.new("TextButton")
+    Btn.Name = name
+    Btn.Size = UDim2.new(1, 0, 0, 45)
+    Btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    Btn.BorderSizePixel = 0
+    Btn.Text = label
+    Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Btn.Font = Enum.Font.GothamSemibold
+    Btn.TextSize = 14
+    Btn.AutoButtonColor = true
+    Btn.Parent = List
+
+    local BCorn = Instance.new("UICorner")
+    BCorn.CornerRadius = UDim.new(0, 8)
+    BCorn.Parent = Btn
+    
+    return Btn
+end
+
+local HeadlessBtn = MakeButton("HeadlessBtn", "Toggle Headless")
+local KorbloxBtn = MakeButton("KorbloxBtn", "Toggle Korblox Leg")
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if not ScreenGui.Parent then break end
+        local Snow = Instance.new("Frame")
+        Snow.Size = UDim2.new(0, math.random(2, 3), 0, math.random(2, 3))
+        Snow.Position = UDim2.new(math.random(), 0, -0.1, 0)
+        Snow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Snow.BackgroundTransparency = math.random(4, 7)/10
+        Snow.BorderSizePixel = 0
+        Snow.Parent = SnowFrame
+        
+        local SCorn = Instance.new("UICorner")
+        SCorn.CornerRadius = UDim.new(1, 0)
+        SCorn.Parent = Snow
+        
+        local fall = TweenService:Create(Snow, TweenInfo.new(2.5, Enum.EasingStyle.Linear), {Position = UDim2.new(Snow.Position.X.Scale + 0.05, 0, 1.1, 0)})
+        fall:Play()
+        fall.Completed:Connect(function() Snow:Destroy() end)
+    end
+end)
+
+local HeadlessOn = false
+local KorbloxOn = false
+
+local KORBLOX_MESH_ID = "rbxassetid://101851696"
+local KORBLOX_TEXTURE_ID = "rbxassetid://101851254"
+local DARK_GREY_COLOR = Color3.fromRGB(64, 64, 64)
+
+local function applyHeadless()
+    local char = player.Character
+    if char and char:FindFirstChild("Head") then
+        local target = HeadlessOn and 1 or 0
+        char.Head.Transparency = target
+        if char.Head:FindFirstChild("face") then char.Head.face.Transparency = target end
+        if char.Head:FindFirstChild("Face") then char.Head.Face.Transparency = target end
+    end
+end
+
+local function applyKorblox()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    if KorbloxOn then
+        if hum.RigType == Enum.HumanoidRigType.R15 then
+            local rf = char:FindFirstChild("RightFoot")
+            local rl = char:FindFirstChild("RightLowerLeg")
+            local ru = char:FindFirstChild("RightUpperLeg")
+
+            if ru and rl and rf then
+                rf.Transparency = 1
+                rl.Transparency = 1
+                
+                ru.MeshId = "http://www.roblox.com/asset/?id=902942096"
+                ru.TextureID = "http://roblox.com/asset/?id=902843398"
+                ru.Color = Color3.new(1, 1, 1)
+                ru.Transparency = 0
+            end
+        else
+            local rightLeg = char:FindFirstChild("Right Leg")
+            if rightLeg then
+                for _, v in ipairs(char:GetChildren()) do
+                    if v:IsA("CharacterMesh") and v.BodyPart == Enum.BodyPart.RightLeg then
+                        v:Destroy()
+                    end
+                end
+                
+                local mesh = rightLeg:FindFirstChildOfClass("SpecialMesh")
+                if not mesh then
+                    mesh = Instance.new("SpecialMesh")
+                    mesh.Parent = rightLeg
+                end
+                
+                rightLeg.Color = DARK_GREY_COLOR
+                rightLeg.Transparency = 0
+                
+                mesh.MeshType = Enum.MeshType.FileMesh
+                mesh.MeshId = KORBLOX_MESH_ID
+                mesh.TextureId = KORBLOX_TEXTURE_ID
+                mesh.Scale = Vector3.new(1, 1, 1)
+            end
+        end
+    else
+        if hum.RigType == Enum.HumanoidRigType.R15 then
+            local rf = char:FindFirstChild("RightFoot")
+            local rl = char:FindFirstChild("RightLowerLeg")
+            local ru = char:FindFirstChild("RightUpperLeg")
+            if ru and rl and rf then
+                rf.Transparency = 0
+                rl.Transparency = 0
+                ru.Transparency = 0
+            end
+        else
+            local rightLeg = char:FindFirstChild("Right Leg")
+            if rightLeg then
+                local mesh = rightLeg:FindFirstChildOfClass("SpecialMesh")
+                if mesh then mesh:Destroy() end
+                rightLeg.Transparency = 0
+                rightLeg.Color = Color3.fromRGB(163, 162, 165)
+            end
+        end
+    end
+end
+
+HeadlessBtn.MouseButton1Click:Connect(function()
+    HeadlessOn = not HeadlessOn
+    HeadlessBtn.TextColor3 = HeadlessOn and Color3.fromRGB(255, 192, 203) or Color3.fromRGB(200, 200, 200)
+    applyHeadless()
+end)
+
+KorbloxBtn.MouseButton1Click:Connect(function()
+    KorbloxOn = not KorbloxOn
+    KorbloxBtn.TextColor3 = KorbloxOn and Color3.fromRGB(255, 192, 203) or Color3.fromRGB(200, 200, 200)
+    applyKorblox()
+end)
+
+task.spawn(function()
+    while true do
+        if player.Character then
+            applyHeadless()
+            applyKorblox()
+        end
+        task.wait(0.5)
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    applyHeadless()
+    applyKorblox()
+end)
+
